@@ -13,17 +13,19 @@ output:
 knitr::opts_chunk$set(cache = FALSE)
 
 library(flexdashboard)
+library(tidyverse)
+library(cowplot)
+library(plotly) # remotes::install_github("ropensci/plotly")
+library(here)
+library("janitor")
+library("lubridate")
 ```
 
 Visualisations
 ===================================== 
 
 
-```{r import-and-prepare-data}
-library(tidyverse)
-library(cowplot)
-library(plotly) # remotes::install_github("ropensci/plotly")
-library(here)
+```{r import-and-prepare-data-pdf, eval=FALSE}
 
 # from https://aappb.org/
 pdf_file <- list.files(here("data/"), 
@@ -35,8 +37,6 @@ tab <- extract_tables(pdf_file, method = "lattice")
 # head(tab[[1]])
 
 # clean the data 
-library("janitor")
-library("lubridate")
 aappb_data_tbl <- 
 map(tab, as_tibble) %>% 
   bind_rows() %>% 
@@ -46,6 +46,41 @@ map(tab, as_tibble) %>%
   mutate(age = parse_number(age)) %>% 
   mutate(date = str_extract(deceased_date, ".*21")) %>% 
   mutate(date = dmy(date)) %>% 
+  mutate(Township = str_squish(str_remove(township, 
+                                          "Tsp|Twnship|Township|township|T/s|Townsip|twonship"))) %>% 
+  mutate(Township = str_replace(Township, "N/", "North ")) %>% 
+  mutate(multiple_people_one_row = parse_number(name)) %>% 
+  slice(rep(seq_len(n()), ifelse(is.na(multiple_people_one_row), 1, multiple_people_one_row)))
+```
+
+
+```{r import-and-prepare-data-excel}
+# or Open PDF in Acrobat, Export as Excel
+# this often does a better job of convetring to a table
+
+xlsx_file <- list.files(here("data/"), 
+                       pattern = ".xlsx",
+                       full.names = TRUE)[1]
+
+aappb_data_tbl <- 
+  readxl::read_excel(xlsx_file,
+                     col_types = c("numeric",
+                                   "text",
+                                    "text",
+                                   "numeric",
+                                    "text",
+                                    "date", 
+                                    "text",
+                                    "text",
+                                    "text",
+                                    "text",
+                                    "text",
+                                    "text")
+                     ) %>% 
+  clean_names() %>% 
+  fill(deceased_date) %>%  # interpolate mal-formed dates
+  filter(!str_detect(tolower(name), "total")) %>% 
+  mutate(date = ymd(deceased_date)) %>% 
   mutate(Township = str_squish(str_remove(township, 
                                           "Tsp|Twnship|Township|township|T/s|Townsip|twonship"))) %>% 
   mutate(Township = str_replace(Township, "N/", "North ")) %>% 
@@ -93,14 +128,28 @@ aappb_data_tbl_date_n_xts_2 <-
   timetk::tk_xts(aappb_data_tbl_date_n_xts,
                  date_col = "date")
   
+dyCrosshair <- function(dygraph, 
+                        direction = c("both", "horizontal", "vertical")) {
+  dyPlugin(
+    dygraph = dygraph,
+    name = "Crosshair",
+    path = system.file("plugins/crosshair.js", 
+                       package = "dygraphs"),
+    options = list(direction = match.arg(direction))
+  )
+}
 
 library(dygraphs)
 dygraph(aappb_data_tbl_date_n_xts_2, 
-        ylab = paste0("People killed since\n", 
+        ylab = paste0("People killed since ", 
                     min(aappb_data_tbl_date_n$date))) %>% 
   dySeries(drawPoints = TRUE, 
         pointSize = 8,
-        strokeWidth = 4)
+        strokeWidth = 4) %>% 
+  dyLegend(show = "always", 
+           hideOnMouseOut = FALSE,
+           width = 300) %>% 
+    dyCrosshair(direction = "both")
 ```
 
 ### Fatalities per day
@@ -111,7 +160,7 @@ people_killed_per_day <-
   ggplot(aappb_data_tbl_date_n) +
     aes(date, `fatalities this day` ) +
     geom_col() +
-    labs(y = "People killed\nper day",
+    labs(y = "People killed per day",
          x = "") +
     theme_minimal(base_size = 14)
 
@@ -360,6 +409,10 @@ The data come from the [Assistance Association for Political Prisoners (Burma)](
 
 Similar data are presented on a Google Data Studio dashboard titled [Myanmar Spring Revolution Fallen Stars](https://datastudio.google.com/u/0/reporting/9dd29405-3992-44a9-a025-1abff2a60b99/page/MrD4B). The dashboard does not list its sources. 
 
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+
 ### Journalists & Observers
 
 - [Poppy McPherson](https://twitter.com/poppymcp)
@@ -395,8 +448,6 @@ Independent International Media
 - [#WhatsHappeningInMyanmar](https://twitter.com/hashtag/WhatsHappeningInMyanmar)
 - [#MilkTeaAlliance](https://twitter.com/hashtag/MilkTeaAlliance)
 
-Column {data-width=200}
------------------------------------------------------------------------
 
 
 
