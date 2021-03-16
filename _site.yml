@@ -1,2 +1,3 @@
 name: "Fatalities-from-the-2021-Military-Coup-in-Myanmar"
 output_dir: docs
+#  knit with rmarkdown::render_site()

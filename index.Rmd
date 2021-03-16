@@ -97,7 +97,10 @@ aappb_data_tbl_date_n_xts_2 <-
 library(dygraphs)
 dygraph(aappb_data_tbl_date_n_xts_2, 
         ylab = paste0("People killed since\n", 
-                    min(aappb_data_tbl_date_n$date)))
+                    min(aappb_data_tbl_date_n$date))) %>% 
+  dySeries(drawPoints = TRUE, 
+        pointSize = 8,
+        strokeWidth = 4)
 ```
 
 ### Fatalities per day
@@ -352,6 +355,10 @@ Column {data-width=200}
 ### The data
 
 The data come from the [Assistance Association for Political Prisoners (Burma)](https://aappb.org/) ([Wikipedia](https://en.wikipedia.org/wiki/Assistance_Association_for_Political_Prisoners)) and their fatality lists posted with their 'daily briefing' [blog posts](https://aappb.org/?cat=7). They also post summaries to [Twitter](https://twitter.com/aapp_burma).
+
+### Related work
+
+Similar data are presented on a Google Data Studio dashboard titled [Myanmar Spring Revolution Fallen Stars](https://datastudio.google.com/u/0/reporting/9dd29405-3992-44a9-a025-1abff2a60b99/page/MrD4B). The dashboard does not list its sources. 
 
 ### Journalists & Observers
 
