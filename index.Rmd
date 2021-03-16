@@ -23,9 +23,12 @@ Visualisations
 library(tidyverse)
 library(cowplot)
 library(plotly) # remotes::install_github("ropensci/plotly")
+library(here)
 
 # from https://aappb.org/
-pdf_file <- list.files(pattern = ".pdf")[1]
+pdf_file <- list.files(here("data/"), 
+                       pattern = ".pdf",
+                       full.names = TRUE)[1]
 
 library("tabulizer")
 tab <- extract_tables(pdf_file, method = "lattice")
@@ -122,7 +125,7 @@ Column {data-width=200}
 library(sf)
 
 township_map <- 
-  st_read("4e3f01a4-6376-4cbb-a14f-54ba66960b7a2020329-1-133w8zn.1sut.shp",
+  st_read(here("data/4e3f01a4-6376-4cbb-a14f-54ba66960b7a2020329-1-133w8zn.1sut.shp"),
           quiet = TRUE) %>% 
   mutate(Township = as.character(TS)) 
 
