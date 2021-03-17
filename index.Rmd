@@ -58,12 +58,13 @@ map(tab, as_tibble) %>%
 # or Open PDF in Acrobat, Export as Excel
 # this often does a better job of convetring to a table
 
-xlsx_file <- list.files(here("data/"), 
+xlsx_file <- list.files(here("data"), 
                        pattern = ".xlsx",
                        full.names = TRUE)[1]
 
 aappb_data_tbl <- 
   readxl::read_excel(xlsx_file,
+                     skip = 0,
                      col_types = c("numeric",
                                    "text",
                                     "text",
