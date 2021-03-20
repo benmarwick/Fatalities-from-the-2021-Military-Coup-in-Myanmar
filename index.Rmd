@@ -296,12 +296,12 @@ township_map_kill_data_lft_n <-
   
   leaflet(township_map_kill_data_lft) %>% 
     setView(lng = 96, 
-            lat = 20, 
-            zoom = 5) %>% 
+            lat = 19, 
+            zoom = 6) %>% 
     addTiles() %>% 
     addCircleMarkers(lng = township_map_kill_data_lft_n$lng,
                      lat = township_map_kill_data_lft_n$lat,
-                     radius = township_map_kill_data_lft_n$n,
+                     radius = township_map_kill_data_lft_n$n + 5,
                      color = "red",
                      stroke = FALSE,
                      popup = ~(township_map_kill_data_lft_n$map_label),
