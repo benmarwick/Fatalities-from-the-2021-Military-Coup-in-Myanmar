@@ -62,31 +62,35 @@ xlsx_file <- list.files(here("data"),
                        pattern = ".xlsx",
                        full.names = TRUE)[1]
 
+first_read <-  readxl::read_excel(xlsx_file)
+
 aappb_data_tbl <- 
   readxl::read_excel(xlsx_file,
                      skip = 0,
                      col_types = c("numeric",
                                    "text",
-                                    "text",
+                                   "text",
                                    "numeric",
                                     "text",
                                     "date", 
-                                    "text",
-                                    "text",
-                                    "text",
-                                    "text",
-                                    "text",
-                                    "text")
+                                   "date",
+                                   rep("text", 
+                                      ncol(first_read)-7))
                      ) %>% 
   clean_names() %>% 
   fill(deceased_date) %>%  # interpolate mal-formed dates
-  filter(!str_detect(tolower(name), "total")) %>% 
+  rename(name = starts_with("name_")) %>% 
+  mutate(name = tolower(name)) %>% 
+  filter(!str_detect(name, "total")) %>% 
   mutate(date = ymd(deceased_date)) %>% 
   mutate(Township = str_squish(str_remove(township, 
                                           "Tsp|Twnship|Township|township|T/s|Townsip|twonship"))) %>% 
   mutate(Township = str_replace(Township, "N/", "North ")) %>% 
   mutate(multiple_people_one_row = parse_number(name)) %>% 
-  slice(rep(seq_len(n()), ifelse(is.na(multiple_people_one_row), 1, multiple_people_one_row)))
+  slice(rep(seq_len(n()), 
+            ifelse(is.na(multiple_people_one_row), 
+                   1, 
+                   multiple_people_one_row)))
 
 # timeline, cumulative and per day
 aappb_data_tbl_date_n <- 
