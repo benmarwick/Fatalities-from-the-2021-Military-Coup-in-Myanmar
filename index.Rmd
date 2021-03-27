@@ -334,7 +334,7 @@ people_killed_by_sex <-
   geom_col() +
   labs(y = "People killed",
        x = "Sex of deceased") +
-  theme_bw()
+  theme_bw(base_size = 16)
 
 # by age
 people_killed_by_age <- 
@@ -343,7 +343,7 @@ people_killed_by_age <-
   geom_histogram() +
   labs(y = "People killed",
        x = "Age at death in years") +
-  theme_minimal(base_size = 16)
+  theme_minimal(base_size = 18)
 
 
 ggdraw(people_killed_by_age) +
