@@ -36,11 +36,25 @@ library("tabulizer")
 tab <- extract_tables(pdf_file, method = "lattice")
 # head(tab[[1]])
 
+col_names <- c("No.",
+               "Name",
+               "Sex",
+               "Age",
+               "Father's name",
+               "Date of Incident",
+               "Deceased Date",
+               "Organization",
+               "Place of Incident",
+               "Home Address",
+               "Township",
+               "States/Regions",
+               "Remarks")
+
 # clean the data 
 aappb_data_tbl <- 
 map(tab, as_tibble) %>% 
   bind_rows() %>% 
-  row_to_names(row_number = 1) %>% 
+  setNames(col_names) %>% 
   clean_names() %>% 
   filter(!str_detect(tolower(name), "total")) %>% 
   mutate(age = parse_number(age)) %>% 
@@ -92,6 +106,16 @@ aappb_data_tbl <-
                    1, 
                    multiple_people_one_row)))
 
+
+```
+
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+### Cumulative Total of Fatalities
+
+```{r}
 # timeline, cumulative and per day
 aappb_data_tbl_date_n <- 
   aappb_data_tbl %>% 
@@ -103,15 +127,7 @@ aappb_data_tbl_date_n <-
     `fatalities this day` = n,
     `total fatalities to date` = cumsum(n)
     )
-```
 
-
-Column {data-width=200}
------------------------------------------------------------------------
-
-### Cumulative Total of Fatalities
-
-```{r}
 # cumulative
 people_killed_so_far <- 
   ggplot(aappb_data_tbl_date_n) +
@@ -163,11 +179,16 @@ dygraph(aappb_data_tbl_date_n_xts_2,
 # per day
 people_killed_per_day <- 
   ggplot(aappb_data_tbl_date_n) +
-    aes(date, `fatalities this day` ) +
+    aes(date, 
+        `fatalities this day`,
+        fill = `fatalities this day`) +
     geom_col() +
     labs(y = "People killed per day",
          x = "") +
-    theme_minimal(base_size = 14)
+    theme_minimal(base_size = 14) +
+    scale_fill_gradient(low="blue", 
+                        high="red") +
+  guides(fill = FALSE)
 
 ggplotly(people_killed_per_day)
 ```
@@ -340,7 +361,19 @@ people_killed_by_sex <-
 people_killed_by_age <- 
   ggplot(aappb_data_tbl) +
   aes(age) +
-  geom_histogram() +
+  annotate("rect", 
+           xmin = 0,
+           xmax = 18,
+           ymin = -Inf,
+           ymax = Inf,
+           fill = "red",
+           alpha = 0.3) +
+    annotate("text", 
+           x = 9,
+           y = 50,
+           size = 8,
+           label = "Children &\nTeenagers") +
+    geom_histogram() +
   labs(y = "People killed",
        x = "Age at death in years") +
   theme_minimal(base_size = 18)
@@ -359,17 +392,22 @@ ggdraw(people_killed_by_age) +
 ```{r, fig.height=10, fig.width=10}
 fatalities_by_township <- 
 ggplot(
-  aappb_data_tbl_tsp_names_tally 
+  aappb_data_tbl_tsp_names_tally %>% 
+    filter(n >= 3)
   ) +
   aes(reorder(Township, n, FUN = sum),
-      n) +
+      n,
+      fill = n) +
   geom_col() +
   coord_flip() +
   labs(x = "",
-       y = "Fatalities") +
+       y = "Fatalities (where 3 or more)") +
    theme_bw(base_size = 16) +
   theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank()) 
+        panel.grid.minor = element_blank()) +
+      scale_fill_gradient(low="blue", 
+                        high="red") +
+  guides(fill = FALSE)
 
 # word cloud on remarks
 library(quanteda)
@@ -408,7 +446,7 @@ Column {data-width=200}
 
 ### The data
 
-The data come from the [Assistance Association for Political Prisoners (Burma)](https://aappb.org/) ([Wikipedia](https://en.wikipedia.org/wiki/Assistance_Association_for_Political_Prisoners)) and their fatality lists posted with their 'daily briefing' [blog posts](https://aappb.org/?cat=7). They also post summaries to [Twitter](https://twitter.com/aapp_burma).
+The data come from the [Assistance Association for Political Prisoners (Burma)](https://aappb.org/) ([Wikipedia](https://en.wikipedia.org/wiki/Assistance_Association_for_Political_Prisoners)) and their fatality lists posted with their 'daily briefing' [blog posts](https://aappb.org/). They also post summaries to [Twitter](https://twitter.com/aapp_burma).
 
 ### Related work
 
